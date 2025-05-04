@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> Responsive Registration Form | CodingLab </title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Title section -->
+    <div class="title">Appointment form</div> 
+    <div class="content">
+      <!-- Registration form -->
+      <form action="#">
+        <div class="user-details">
+          <!-- Input for Full Name -->
+          <div class="input-box">
+            <span class="details">Full Name</span>
+            <input type="text" placeholder="Enter your name" required>
+          </div>
+          <!-- Input for Email -->
+          <div class="input-box">
+            <span class="details">Email</span>
+            <input type="text" placeholder="Enter your email" required>
+          </div>
+          <!-- Input for Phone Number -->
+          <div class="input-box">
+            <span class="details">Phone Number</span>
+            <input type="text" placeholder="Enter your number" required>
+          </div>
+          <!-- Input for Address -->
+          <div class="input-box">
+            <span class="details">Address</span>
+            <input type="text" placeholder="Enter your Address" required>
+          </div>
+          <!-- Input for Date of Birth -->
+          <div class="input-box">
+            <span class="details">Date of Birth</span>
+            <input type="date" placeholder="Enter your date of birth" required>
+          </div>
+          <!-- Input for Problem -->
+          <div class="input-box">
+            <span class="details">Issues</span>
+            <input type="text" placeholder="What is the Problem?">
+          </div>
+          </div> 
+        <div class="gender-details">
+          <!-- Radio buttons for gender selection -->
+          <input type="radio" name="gender" id="dot-1">
+          <input type="radio" name="gender" id="dot-2">
+          <input type="radio" name="gender" id="dot-3">
+          <span class="gender-title">Gender</span>
+          <div class="category">
+            <!-- Label for Male -->
+            <label for="dot-1">
+              <span class="dot one"></span>
+              <span class="gender">Male</span>
+            </label>
+            <!-- Label for Female -->
+            <label for="dot-2">
+              <span class="dot two"></span>
+              <span class="gender">Female</span>
+            </label>
+            <!-- Label for Prefer not to say -->
+            <label for="dot-3">
+              <span class="dot three"></span>
+              <span class="gender">Prefer not to say</span>
+            </label>
+          </div>
+        </div>
+        <!-- Testing another Submit Button-->
+        <div class="button">
+          <input type="submit" class="button" onclick="openpopup()">
+        </div>
+        <!-- Submit button -->
+        <div class="popup" id="popup">
+          <img src="Assets/tick.png">
+          <h2>Thank You!</h2>
+          <p>Your details has been successfully submitted</p>
+          <button type="button"onclick="closepopup()">OK</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+  let popup = document.getElementById("popup");
+  function openpopup(){
+    popup.classList.add("open-popup");
+  }
+  function closepopup(){
+    popup.classList.remove("open-popup");
+  }
+  </script>
+</body>
+</html>
