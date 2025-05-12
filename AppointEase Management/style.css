@@ -1,0 +1,59 @@
+body{
+  margin: 0px;
+}
+main{
+  margin-left: 20px;
+  margin-right: 20px;
+}
+h1{
+  text-align: center;
+}
+.navbar ul{
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  background-color: hsl(224, 65%, 51%);
+  overflow: hidden;
+}
+.navbar a{
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 25px 227px;
+  text-decoration: none;
+}
+.navbar a:hover{
+  background-color: hsl(221, 71%, 37%);
+}
+.navbar li{
+  float: left;
+}
+.navbar2 ul{
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  background-color: hsl(224, 65%, 51%);
+  overflow: hidden;
+}
+.navbar2 a{
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 25px 229px;
+  text-decoration: none;
+}
+.navbar2 a:hover{
+  background-color: hsl(221, 71%, 37%);
+}
+.navbar2 li{
+  float: left;
+}
+.titlepatient{
+  text-align: center;
+  margin-top: 20px;
+  box-shadow: 0px 0px 10px 0px hsl(224, 65%, 51%); 
+  padding: 10px 40px;
+  background-color: hsl(224, 65%, 51%);
+  color: white;
+  font-size: 30px;
+}

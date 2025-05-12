@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@tailwindcss/browser@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Custom CSS for the message box */
+        #message-box {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f0fdf4;
+            color: #15803d;
+            padding: 16px;
+            border-radius: 6px;
+            border: 1px solid #16a34a;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        #message-box.show {
+            display: block;
+        }
+
+        /* Custom CSS for the calendar */
+        .calendar {
+            width: 100%;
+            max-width: 300px; /* Increased max-width for better responsiveness */
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1rem;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .calendar-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .calendar-nav-buttons button {
+            background-color: transparent;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            color: #718096;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .calendar-nav-buttons button:hover {
+            background-color: #edf2f7;
+            color: #4a5568;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+        }
+
+        .calendar-grid-header {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #a0aec0;
+            text-align: center;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .calendar-day {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: 400;
+            color: #4a5568;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            background-color: #edf2f7;
+        }
+
+        .calendar-day.today {
+            background-color: #f56565;
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.selected {
+            background-color: #4a5568;
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.disabled {
+            color: #cbd5e0;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-inter antialiased">
+    <h1></h1>
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li><a href="homepage.html" class="navbar-link">Home</a></li>
+            <li><a href="appointments.html" class="navbar-link">Appointments</a></li>
+            <li><a href="patients.html" class="navbar-link">Patients</a></li>
+            <li><a href="reports.html" class="navbar-link">Reports</a></li>
+        </ul>
+    </nav>
+    
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-indigo-500 text-white py-4 shadow-md">
+            <div class="container mx-auto px-4">
+                <h1 class="text-2xl font-semibold">Appointment Management System</h1>
+            </div>
+        </header>
+
+        <main class="flex-1 container mx-auto px-4 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2">Pending Appointments</h2>
+                    <div id="pending-appointments-count" class="text-xl font-bold text-blue-500">0</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2">Approved Today</h2>
+                    <div id="approved-today-count" class="text-xl font-bold text-green-500">0</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2">Completed Appointments</h2>
+                    <div id="completed-appointments-count" class="text-xl font-bold text-purple-500">0</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <section class="lg:col-span-3">
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Appointment Management</h2>
+                        <div class="mb-4 flex flex-wrap gap-4">
+                            <input
+                                type="text"
+                                id="search-patient"
+                                placeholder="Search by Patient Name/ID"
+                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                            <input
+                                type="date"
+                                id="filter-date"
+                                placeholder="Filter by Date"
+                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                            <select id="filter-status" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                            <button id="search-appointments" class="bg-indigo-500 hover:bg-indigo-700 text-white font-semibold rounded-md py-2 px-4 focus:outline-none focus:shadow-outline">
+                                Search
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full leading-normal shadow-md rounded-lg overflow-hidden">
+                                <thead class="bg-gray-200 text-gray-700">
+                                    <tr>
+                                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Patient Name</th>
+                                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Appointment Date</th>
+                                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
+                                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Purpose of Appointment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="appointment-table-body" class="bg-white">
+                                    <tr>
+                                        <td colspan="4" class="px-5 py-5 border-b border-gray-200 text-sm">No appointments found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Check-In / Check-Out</h2>
+                        <div class="mb-4 flex gap-4">
+                            <input
+                                type="text"
+                                id="search-checkin-patient"
+                                placeholder="Search Patient by Name/ID"
+                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            />
+                            <button id="search-checkin" class="bg-indigo-500 hover:bg-indigo-700 text-white font-semibold rounded-md py-2 px-4 focus:outline-none focus:shadow-outline">
+                                Search
+                            </button>
+                        </div>
+                        <div id="checkin-results" class="hidden bg-gray-50 border border-gray-200 rounded-md p-4 mb-4">
+                            <p class="text-gray-700">Patient Name: <span id="checkin-patient-name" class="font-semibold"></span></p>
+                            <p class="text-gray-700">Appointment Date: <span id="checkin-appointment-date" class="font-semibold"></span></p>
+                            <p class="text-gray-700">Status: <span id="checkin-status" class="font-semibold"></span></p>
+                            <div class="mt-4 flex gap-4">
+                                <button id="check-in-button" class="bg-green-500 hover:bg-green-700 text-white font-semibold rounded-md py-2 px-4 focus:outline-none focus:shadow-outline">Check-In</button>
+                                <button id="check-out-button" class="bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded-md py-2 px-4 focus:outline-none focus:shadow-outline">Check-Out</button>
+                            </div>
+                            <div id="checkin-checkout-message" class="mt-4 text-gray-600 font-italic"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Notifications</h2>
+                        <ul id="notification-list" class="space-y-3">
+                            </ul>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Calendar</h2>
+                        <div id="calendar" class="calendar">
+                            <div class="calendar-header">
+                                <h3 id="calendar-month" class="calendar-title">Month</h3>
+                                <div class="calendar-nav-buttons">
+                                    <button id="calendar-prev-month" aria-label="Previous Month">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button id="calendar-next-month" aria-label="Next Month">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid">
+                                <div class="calendar-grid-header">Sun</div>
+                                <div class="calendar-grid-header">Mon</div>
+                                <div class="calendar-grid-header">Tue</div>
+                                <div class="calendar-grid-header">Wed</div>
+                                <div class="calendar-grid-header">Thu</div>
+                                <div class="calendar-grid-header">Fri</div>
+                                <div class="calendar-grid-header">Sat</div>
+                            </div>
+                            <div id="calendar-days" class="calendar-grid">
+                                </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Patient Records Access</h2>
+                <div class="mb-4 flex gap-4">
+                    <input
+                        type="text"
+                        id="search-patient-record"
+                        placeholder="Search Patient by Name/ID"
+                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    />
+                    <button id="search-patient-records-button" class="bg-indigo-500 hover:bg-indigo-700 text-white font-semibold rounded-md py-2 px-4 focus:outline-none focus:shadow-outline">
+                        Search
+                    </button>
+                </div>
+                <div id="patient-record-results" class="hidden">
+                    <div class="bg-gray-50 border border-gray-200 rounded-md p-4">
+                        <p class="text-gray-700">Patient Name: <span id="patient-record-name" class="font-semibold"></span></p>
+                        <p class="text-gray-700">Patient ID: <span id="patient-record-id" class="font-semibold"></span></p>
+                        <h3 class="text-lg font-semibold mt-4 mb-2">Appointment History:</h3>
+                        <ul id="patient-record-history" class="list-disc list-inside">
+                            </ul>
+                        <h3 class="text-lg font-semibold mt-4 mb-2">Medical Notes:</h3>
+                        <p id="patient-record-notes" class="text-gray-700"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bg-gray-800 text-white py-4">
+            <div class="container mx-auto px-4 text-center">
+                &copy; 2023 Appointment Management System
+            </div>
+        </footer>
+    </div>
+
+    <div id="message-box"></div>
+
+    <script>
+        // Get references to DOM elements
+        const appointmentTableBody = document.getElementById("appointment-table-body");
+        const searchPatientInput = document.getElementById("search-patient");
+        const filterDateInput = document.getElementById("filter-date");
+        const filterStatusSelect = document.getElementById("filter-status");
+        const searchAppointmentsButton = document.getElementById("search-appointments");
+        const pendingAppointmentsCountDisplay = document.getElementById("pending-appointments-count");
+        const approvedTodayCountDisplay = document.getElementById("approved-today-count");
+        const completedAppointmentsCountDisplay = document.getElementById("completed-appointments-count");
+        const notificationList = document.getElementById("notification-list");
+        const searchCheckinPatientInput = document.getElementById("search-checkin-patient");
+        const searchCheckinButton = document.getElementById("search-checkin");
+        const checkinResultsDiv = document.getElementById("checkin-results");
+        const checkinPatientNameDisplay = document.getElementById("checkin-patient-name");
+        const checkinAppointmentDateDisplay = document.getElementById("checkin-appointment-date");
+        const checkinStatusDisplay = document.getElementById("checkin-status");
+        const checkInButton = document.getElementById("check-in-button");
+        const checkOutButton = document.getElementById("check-out-button");
+        const checkinCheckoutMessage = document.getElementById("checkin-checkout-message");
+        const searchPatientRecordInput = document.getElementById("search-patient-record");
+        const searchPatientRecordsButton = document.getElementById("search-patient-records-button");
+        const patientRecordResultsDiv = document.getElementById("patient-record-results");
+        const patientRecordNameDisplay = document.getElementById("patient-record-name");
+        const patientRecordIdDisplay = document.getElementById("patient-record-id");
+        const patientRecordHistoryList = document.getElementById("patient-record-history");
+        const patientRecordNotesDisplay = document.getElementById("patient-record-notes");
+        const messageBox = document.getElementById("message-box");
+        
+        // Calendar elements
+        const calendarEl = document.getElementById('calendar');
+        const calendarMonthEl = document.getElementById('calendar-month');
+        const calendarDaysEl = document.getElementById('calendar-days');
+        const calendarPrevMonthBtn = document.getElementById('calendar-prev-month');
+        const calendarNextMonthBtn = document.getElementById('calendar-next-month');
+
+        // Sample appointment data (replace with actual data source)
+        let appointments = [
+            { id: 1, patientName: "Carlo Molejon", appointmentDate: "2025-12-01", status: "pending", checkinTime: null, checkoutTime: null, notes: "Follow up on cough" },
+            { id: 2, patientName: "Hassan Umpa", appointmentDate: "2025-12-01", status: "approved", checkinTime: null, checkoutTime: null, notes: "Annual checkup" },
+            { id: 3, patientName: "Joshua Ventoza", appointmentDate: "2025-12-02", status: "completed", checkinTime: "2025-12-02 09:00", checkoutTime: "2025-12-02 10:00", notes: "Flu shot" },
+            { id: 4, patientName: "April Santos", appointmentDate: "2025-12-02", status: "pending", checkinTime: null, checkoutTime: null, notes: "Sore throat" },
+            { id: 5, patientName: "Diane Razo", appointmentDate: "2025-12-03", status: "approved", checkinTime: null, checkoutTime: null, notes: "Physical exam" },
+            { id: 6, patientName: "Jimmy Neutron", appointmentDate: "2025-12-05", status: "rejected", checkinTime: null, checkoutTime: null, notes: "Missed appointment" },
+            { id: 7, patientName: "Courage", appointmentDate: "2025-12-05", status: "approved", checkinTime: null, checkoutTime: null, notes: "Vaccination" },
+            { id: 8, patientName: "Muriel Bagge", appointmentDate: "2025-12-06", status: "completed", checkinTime: "2025-12-06 11:00", checkoutTime: "2025-12-06 12:30", notes: "Heart checkup" },
+            { id: 9, patientName: "Eustace Bagge", appointmentDate: "2025-12-06", status: "pending", checkinTime: null, checkoutTime: null, notes: "Covid 19" },
+            { id: 10, patientName: "Cardo Dalisay", appointmentDate: "2025-12-07", status: "approved", checkinTime: null, checkoutTime: null, notes: "Bullet lead removal" },
+        ];
+
+        // Sample patient data for patient records (replace with actual data source)
+        let patients = [
+            { id: 101, name: "Carlo Molejon", appointments: [1, 6], medicalNotes: "Patient has a history of allergies." },   
+            { id: 102, name: "Hassan Umpa", appointments: [2, 7], medicalNotes: "Patient is in good health." },
+            { id: 103, name: "Joshua Ventoza", appointments: [3, 8], medicalNotes: "Patient is recovering from surgery." },
+            { id: 104, name: "April Santos", appointments: [4, 9], medicalNotes: "Patient has a skin condition." },
+            { id: 105, name: "Diane Razo", appointments: [5, 10], medicalNotes: "Patient has high blood pressure." },
+        ];
+
+        // Function to display a message
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = `fixed top-4 left-1/2 transform -translate-x-1/2 bg-${type === 'success' ? 'green' : 'red'}-100 text-${type === 'success' ? 'green' : 'red'}-700 border border-${type === 'success' ? 'green' : 'red'}-400 px-4 py-2 rounded shadow-md`;
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000); // Hide after 3 seconds
+        }
+
+        // Function to render appointment table
+        function renderAppointments(filteredAppointments) {
+            if (filteredAppointments.length === 0) {
+                appointmentTableBody.innerHTML = '<tr><td colspan="4" class="px-5 py-5 border-b border-gray-200 text-sm">No appointments found.</td></tr>';
+                return;
+            }
+
+            let html = "";
+            filteredAppointments.forEach((appointment) => {
+                html += `
+                    <tr>
+                        <td class="px-5 py-5 border-b border-gray-200 text-sm"><span class="font-italic text-gray-800">${appointment.patientName}</span></td>
+                        <td class="px-5 py-5 border-b border-gray-200 text-sm"><span class="font-semibold text-blue-600">${appointment.appointmentDate}</span></td>
+                        <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                            <span class="${getStatusColor(appointment.status)}">${appointment.status}</span>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                            <div class="flex gap-2">
+                                <button class="action-btn approve-btn bg-green-500 hover:bg-green-700 text-white font-semibold rounded-md py-1 px-2 focus:outline-none focus:shadow-outline" data-id="${appointment.id}" ${appointment.status === 'pending' ? '' : 'disabled'}>Approve</button>
+                                <button class="action-btn reject-btn bg-red-500 hover:bg-red-700 text-white font-semibold rounded-md py-1 px-2 focus:outline-none focus:shadow-outline" data-id="${appointment.id}" ${appointment.status === 'pending' ? '' : 'disabled'}>Reject</button>
+                                <button class="action-btn suggest-time-btn bg-yellow-500 hover:bg-yellow-700 text-gray-900 font-semibold rounded-md py-1 px-2 focus:outline-none focus:shadow-outline" data-id="${appointment.id}">Suggest Time</button>
+                            </div>
+                        <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                            <span class="font-semibold text-gray-800">${appointment.notes}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+            appointmentTableBody.innerHTML = html;
+
+            // Attach event listeners to the action buttons
+            document.querySelectorAll('.approve-btn').forEach(button => {
+                button.addEventListener('click', handleApprove);
+            });
+            document.querySelectorAll('.reject-btn').forEach(button => {
+                button.addEventListener('click', handleReject);
+            });
+            document.querySelectorAll('.suggest-time-btn').forEach(button => {
+                button.addEventListener('click', handleSuggestTime);
+            });
+        }
+
+        // Function to get status color
+        function getStatusColor(status) {
+            switch (status) {
+                case "pending": return "text-yellow-500 font-semibold";
+                case "approved": return "text-green-500 font-semibold";
+                case "rejected": return "text-red-500 font-semibold";
+                case "completed": return "text-purple-500 font-semibold";
+                default: return "text-gray-500 font-semibold";
+            }
+        }
+
+        // Function to handle approve action
+        function handleApprove(event) {
+            const appointmentId = parseInt(event.target.dataset.id);
+            const appointment = appointments.find(a => a.id === appointmentId);
+
+            if (appointment) {
+                appointment.status = "approved";
+                appointments = [...appointments]; // Createa new array to trigger update
+                renderAppointments(filterAppointments());
+                updateSummaryCounts();
+                addNotification(`Appointment for ${appointment.patientName} on ${appointment.appointmentDate} has been approved.`);
+                showMessage(`Appointment for ${appointment.patientName} approved!`, 'success');
+            }
+        }
+
+        // Function to handle reject action
+        function handleReject(event) {
+            const appointmentId = parseInt(event.target.dataset.id);
+            const appointment = appointments.find(a => a.id === appointmentId);
+            if (appointment) {
+                appointment.status = "rejected";
+                appointments = [...appointments]; // Create a new array to trigger update
+                renderAppointments(filterAppointments());
+                updateSummaryCounts();
+                addNotification(`Appointment for ${appointment.patientName} on ${appointment.appointmentDate} has been rejected.`);
+                showMessage(`Appointment for ${appointment.patientName} rejected!`, 'error');
+            }
+        }
+
+        // Function to handle suggest time action
+        function handleSuggestTime(event) {
+            const appointmentId = parseInt(event.target.dataset.id);
+            const appointment = appointments.find(a => a.id === appointmentId);
+            if (appointment) {
+                const newTime = prompt("Enter new appointment date and time (e.g., 2023-12-08 14:00):", "2023-12-08 14:00");
+                if (newTime) {
+                    appointment.appointmentDate = newTime;
+                    appointment.status = "pending"; // Reset status to pending for review
+                     appointments = [...appointments];
+                    renderAppointments(filterAppointments());
+                    updateSummaryCounts();
+                    addNotification(`Suggested new time for appointment for ${appointment.patientName} to ${newTime}.`);
+                    showMessage(`Suggested new time for ${appointment.patientName}`, 'success');
+                }
+            }
+        }
+
+        // Function to filter appointments
+        function filterAppointments() {
+            const searchTerm = searchPatientInput.value.toLowerCase();
+            const filterDate = filterDateInput.value;
+            const filterStatus = filterStatusSelect.value;
+
+            return appointments.filter(appointment => {
+                const searchMatch = appointment.patientName.toLowerCase().includes(searchTerm);
+                const dateMatch = !filterDate || appointment.appointmentDate.startsWith(filterDate);
+                const statusMatch = !filterStatus || appointment.status === filterStatus;
+                return searchMatch && dateMatch && statusMatch;
+            });
+        }
+
+        // Function to update summary counts
+        function updateSummaryCounts() {
+            pendingAppointmentsCountDisplay.textContent = appointments.filter(a => a.status === "pending").length;
+            approvedTodayCountDisplay.textContent = appointments.filter(a => a.status === "approved" && a.appointmentDate === new Date().toISOString().split("T")[0]).length;
+            completedAppointmentsCountDisplay.textContent = appointments.filter(a => a.status === "completed").length;
+        }
+
+        // Function to add notifications
+        function addNotification(message) {
+            const listItem = document.createElement("li");
+            listItem.className = "bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 rounded";
+            listItem.textContent = message;
+            notificationList.appendChild(listItem);
+        }
+
+        // Event listener for search button
+        searchAppointmentsButton.addEventListener("click", () => {
+            renderAppointments(filterAppointments());
+        });
+
+        // --- Check-in/Check-out functionality ---
+        let selectedAppointment = null;
+
+        searchCheckinButton.addEventListener("click", () => {
+            const searchTerm = searchCheckinPatientInput.value.toLowerCase();
+            selectedAppointment = appointments.find(a => a.patientName.toLowerCase().includes(searchTerm));
+
+            if (selectedAppointment) {
+                checkinResultsDiv.classList.remove("hidden");
+                checkinPatientNameDisplay.textContent = selectedAppointment.patientName;
+                checkinAppointmentDateDisplay.textContent = selectedAppointment.appointmentDate;
+                checkinStatusDisplay.textContent = selectedAppointment.status;
+                checkinCheckoutMessage.textContent = "";
+                checkInButton.disabled = selectedAppointment.checkinTime !== null;
+                checkOutButton.disabled = selectedAppointment.checkinTime === null || selectedAppointment.checkoutTime !== null;
+            } else {
+                checkinResultsDiv.classList.add("hidden");
+                showMessage("Patient not found!", 'error');
+            }
+        });
+
+        checkInButton.addEventListener("click", () => {
+            if (selectedAppointment) {
+                selectedAppointment.checkinTime = new Date().toLocaleString();
+                selectedAppointment.status = "approved"; // Update status
+                appointments = [...appointments];
+                checkinCheckoutMessage.textContent = `Patient ${selectedAppointment.patientName} checked in at ${selectedAppointment.checkinTime}.`;
+                checkInButton.disabled = true;
+                checkOutButton.disabled = false;
+                renderAppointments(filterAppointments()); // Update the main table
+                updateSummaryCounts();
+                 showMessage(`Patient ${selectedAppointment.patientName} checked in`, 'success');
+            }
+        });
+
+        checkOutButton.addEventListener("click", () => {
+            if (selectedAppointment) {
+                selectedAppointment.checkoutTime = new Date().toLocaleString();
+                selectedAppointment.status = "completed"; //update status
+                appointments = [...appointments];
+                checkinCheckoutMessage.textContent = `Patient ${selectedAppointment.patientName} checked out at ${selectedAppointment.checkoutTime}.`;
+                checkInButton.disabled = true;
+                checkOutButton.disabled = true;
+                renderAppointments(filterAppointments());  // Update the main table
+                updateSummaryCounts();
+                showMessage(`Patient ${selectedAppointment.patientName} checked out`, 'success');
+            }
+        });
+
+        // --- Patient Records Access ---
+        searchPatientRecordsButton.addEventListener("click", () => {
+            const searchTerm = searchPatientRecordInput.value.toLowerCase();
+            const patient = patients.find(p => p.name.toLowerCase().includes(searchTerm) || p.id.toString().includes(searchTerm));
+
+            if (patient) {
+                patientRecordResultsDiv.classList.remove("hidden");
+                patientRecordNameDisplay.textContent = patient.name;
+                patientRecordIdDisplay.textContent = patient.id;
+
+                let historyHTML = patient.appointments.map(appId => {
+                    const app = appointments.find(a => a.id === appId);
+                    return app ? `<li>Date: ${app.appointmentDate}, Status: ${app.status}</li>` : '<li>Appointment not found</li>';
+                }).join('');
+                patientRecordHistoryList.innerHTML = historyHTML;
+                patientRecordNotesDisplay.textContent = patient.medicalNotes;
+            } else {
+                patientRecordResultsDiv.classList.add("hidden");
+                showMessage("Patient record not found!", 'error');
+            }
+        });
+
+        // --- Calendar functionality ---
+        let currentDate = new Date();
+        let selectedDate = null;
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            calendarMonthEl.textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            calendarDaysEl.innerHTML = '';
+
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                calendarDaysEl.innerHTML += '<div class="calendar-day disabled"></div>';
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const isToday = date.toDateString() === new Date().toDateString();
+                const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
+
+                let dayContent = `<div class="calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" data-date="${date.toISOString()}">${day}</div>`;
+                calendarDaysEl.innerHTML += dayContent;
+            }
+
+            // Attach event listeners to the day elements
+            document.querySelectorAll('.calendar-day').forEach(dayElement => {
+                dayElement.addEventListener('click', handleDayClick);
+            });
+        }
+
+        function handleDayClick(event) {
+            const selectedDateStr = event.target.dataset.date;
+            selectedDate = new Date(selectedDateStr);
+            renderCalendar(); // Re-render to update selected day styling
+            console.log('Selected Date:', selectedDate.toISOString().split("T")[0]); // ISO string
+            filterDateInput.value = selectedDate.toISOString().split("T")[0]; // Update filter input
+            renderAppointments(filterAppointments());
+        }
+
+        function handlePrevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function handleNextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        calendarPrevMonthBtn.addEventListener('click', handlePrevMonth);
+        calendarNextMonthBtn.addEventListener('click', handleNextMonth);
+
+        // Initial render
+        renderCalendar();
+        renderAppointments(filterAppointments());
+        updateSummaryCounts();
+
+
+    </script>
+</body>
+</html>
