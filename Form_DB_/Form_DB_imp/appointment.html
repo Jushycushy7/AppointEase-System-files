@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinic Appointment Form</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    #popup {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper register-wrapper">
+    <form id="appointment-form" action="submit_appointment.php" method="POST">
+      <h1>Clinic Appointment Form</h1>
+
+  <div class="input-box">
+    <label><strong>Please fill in the needed information</strong></label>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <input type="text" name="firstName" placeholder="First Name" required style="flex: 1;">
+      <input type="text" name="lastName" placeholder="Last Name" required style="flex: 1;">
+    </div>
+    <div style="margin-top: 10px;">
+      <input type="text" name="age" placeholder="Age" required pattern="\d+" style="width: 100%; margin-top: 5px;">
+      <input type="text" name="gender" placeholder="Gender" required style="width: 100%; margin-top: 5px;">
+      <input type="text" name="phone" placeholder="Phone (11 digits)" required pattern="\d{11}" style="width: 100%; margin-top: 5px;">
+      <input type="email" name="email" placeholder="Email" required style="width: 100%; margin-top: 5px;">
+    </div>
+  </div>
+
+        <div class="input-box">
+          <label for="calendar">Date of Appointment:</label><br>
+          <input type="date" name="appointmentDate" id="calendar" required>
+        </div>
+
+      <div class="input-box">
+        <label for="time">Time:</label>
+        <select name="appointmentTime" id="time" required>
+          <option value="">Select Time</option>
+          <option value="08:00">08:00 AM</option>
+          <option value="09:00">09:00 AM</option>
+          <option value="10:00">10:00 AM</option>
+          <option value="11:00">11:00 AM</option>
+          <option value="12:00">12:00 PM</option>
+          <option value="13:00">01:00 PM</option>
+          <option value="14:00">02:00 PM</option>
+          <option value="15:00">03:00 PM</option>
+          <option value="16:00">04:00 PM</option>
+          <option value="17:00">05:00 PM</option>
+        </select>
+      </div>
+
+      <div class="input-box">
+        <label for="service">What service are you looking for?</label>
+        <select name="service" id="service" required>
+          <option value="">Select Service</option>
+          <option value="Checkup">Checkup</option>
+          <option value="Vaccination">Vaccination</option>
+          <option value="Consultation">Consultation</option>
+          <option value="Others">Others</option>
+        </select>
+      </div>
+
+      <div class="input-box" id="other-service-box" style="display: none;">
+        <input type="text" name="otherService" placeholder="Please specify">
+      </div>
+
+      <div class="input-box">
+        <input type="text" name="reason" placeholder="Reason for Appointment" required>
+      </div>
+
+      <input type="submit" class="btn" value="Submit">
+    </form>
+  </div>
+
+  <div id="popup"></div>
+
+  <script>
+    const form = document.getElementById("appointment-form");
+    const serviceSelect = document.getElementById("service");
+    const otherServiceBox = document.getElementById("other-service-box");
+    const popup = document.getElementById("popup");
+
+    serviceSelect.addEventListener("change", function () {
+      if (this.value === "Others") {
+        otherServiceBox.style.display = "block";
+        otherServiceBox.querySelector("input").required = true;
+      } else {
+        otherServiceBox.style.display = "none";
+        otherServiceBox.querySelector("input").required = false;
+      }
+    });
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+
+      // Validate "Others" service input
+      if (formData.get("service") === "Others" && !formData.get("otherService").trim()) {
+        alert("Please specify the service when 'Others' is selected.");
+        return;
+      }
+
+      const response = await fetch("submit_appointment.php", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+
+      popup.innerText = result.message;
+      popup.style.display = "block";
+      popup.style.backgroundColor = result.status === "success" ? "#4CAF50" : "#f44336";
+
+      setTimeout(() => {
+        popup.style.display = "none";
+      }, 2500);
+
+      if (result.status === "success") {
+        form.reset();
+        otherServiceBox.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
