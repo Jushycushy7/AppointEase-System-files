@@ -19,7 +19,7 @@ h1{
   display: block;
   color: white;
   text-align: center;
-  padding: 25px 227px;
+  padding: 25px 312px;
   text-decoration: none;
 }
 .navbar a:hover{
@@ -39,7 +39,7 @@ h1{
   display: block;
   color: white;
   text-align: center;
-  padding: 25px 229px;
+  padding: 25px 314.5px;
   text-decoration: none;
 }
 .navbar2 a:hover{
@@ -52,7 +52,7 @@ h1{
   text-align: center;
   margin-top: 20px;
   box-shadow: 0px 0px 10px 0px hsl(224, 65%, 51%); 
-  padding: 10px 40px;
+  padding: 10px 50px;
   background-color: hsl(224, 65%, 51%);
   color: white;
   font-size: 30px;
